@@ -3,133 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rickshaw Pro X</title>
+<title>CGN Smart</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+*{box-sizing:border-box;}
 body{
 margin:0;
 font-family:Segoe UI;
-background:#0f0f14;
+background:linear-gradient(160deg,#0c0f1a,#111827);
 color:white;
+overflow:hidden;
 }
+
+.screen{
+display:none;
+height:calc(100vh - 70px);
+overflow-y:auto;
+padding-bottom:20px;
+}
+
+.active{display:block;}
+
 .card{
 background:rgba(255,255,255,0.05);
 margin:15px;
-padding:18px;
+padding:20px;
 border-radius:20px;
-backdrop-filter:blur(10px);
-box-shadow:0 0 20px rgba(0,255,136,0.1);
+backdrop-filter:blur(15px);
+box-shadow:0 0 25px rgba(0,255,170,0.1);
 }
+
 input{
 width:100%;
 padding:12px;
 margin:6px 0;
 border:none;
 border-radius:12px;
-background:#1a1a25;
+background:#1a1f2e;
 color:white;
 }
+
 button{
 width:100%;
 padding:12px;
 margin-top:8px;
 border:none;
 border-radius:12px;
-background:#00ff88;
+background:linear-gradient(90deg,#00ffaa,#00ccff);
 color:black;
 font-weight:bold;
 }
+
+.big{
+font-size:26px;
+color:#00ffaa;
+font-weight:bold;
+}
+
 .navbar{
 position:fixed;
 bottom:0;
 width:100%;
-background:#111;
+height:70px;
+background:#111827;
 display:flex;
 justify-content:space-around;
-padding:10px 0;
+align-items:center;
+border-top:1px solid rgba(255,255,255,0.1);
 }
-.navbar div{font-size:14px;}
-.hidden{display:none;}
-.big{
-font-size:22px;
-color:#00ff88;
-font-weight:bold;
+
+.navbar div{
+color:#888;
+font-size:14px;
+text-align:center;
 }
+
+.navbar .activeTab{
+color:#00ffaa;
+}
+
+h3{margin-top:0;}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="card">
-<h2>Rickshaw Pro X</h2>
+<div id="loginScreen" class="card" style="margin-top:100px;">
+<h2>CGN Smart</h2>
 <input type="text" id="loginId" placeholder="User ID">
 <input type="password" id="loginPin" placeholder="4 Digit PIN">
 <button onclick="login()">Login / Register</button>
 </div>
 
+<!-- APP -->
+<div id="app" style="display:none;">
+
 <!-- DASHBOARD -->
-<div id="appScreen" class="hidden">
-
+<div id="dashboard" class="screen active">
 <div class="card">
-<h3>Dashboard</h3>
-<div>Lifetime KM</div>
-<div class="big" id="lifetimeKM">0</div>
-<div>Current Tank KM</div>
-<div class="big" id="tankKM">0</div>
-<div>Fuel Left (L)</div>
-<div class="big" id="fuelLeft">0</div>
+<h3>Tank Intelligence</h3>
+<div>Fuel Left</div>
+<div class="big" id="fuelLeft">0 L</div>
 <div>KM Can Run</div>
-<div class="big" id="kmCanRun">0</div>
-<div>Total Earning</div>
-<div class="big" id="totalEarn">0</div>
-<div>Net Profit</div>
-<div class="big" id="netProfit">0</div>
-<button onclick="resetTank()">Reset Tank Cycle</button>
+<div class="big" id="kmRun">0 KM</div>
+<div>Current Tank KM</div>
+<div class="big" id="tankKM">0 KM</div>
+<div>Mileage</div>
+<div class="big" id="mileageDisplay">0 KM/L</div>
+<button onclick="resetTank()">Reset Tank</button>
+</div>
+</div>
+
+<!-- FUEL -->
+<div id="fuel" class="screen">
+<div class="card">
+<h3>Fuel Settings</h3>
+<input type="number" id="tankCapacity" placeholder="Tank Capacity (Default 4)" value="4">
+<input type="number" id="manualMileage" placeholder="Manual Mileage (optional)">
 </div>
 
 <div class="card">
-<h3>Daily Entry</h3>
-<input type="number" id="dailyKM" placeholder="KM Driven">
-<input type="number" id="dailyEarn" placeholder="Earning ₹">
-<button onclick="addDaily()">Add</button>
-<div id="dailyList"></div>
-</div>
-
-<div class="card">
-<h3>Fuel Refill</h3>
+<h3>Add Fuel Refill</h3>
 <input type="number" id="fuelLiter" placeholder="Liter">
 <input type="number" id="fuelPrice" placeholder="Price per Liter">
-<button onclick="addFuel()">Add Fuel</button>
-<div id="fuelList"></div>
+<button onclick="addFuel()">Save Refill</button>
+<div id="fuelHistory"></div>
+</div>
 </div>
 
+<!-- DAILY -->
+<div id="daily" class="screen">
 <div class="card">
-<h3>Maintenance</h3>
-<input type="text" id="maintNote" placeholder="Note">
-<input type="number" id="maintCost" placeholder="Cost">
-<button onclick="addMaint()">Add</button>
-<div id="maintList"></div>
+<h3>Add KM</h3>
+<input type="number" id="dailyKM" placeholder="KM Driven">
+<button onclick="addKM()">Add KM</button>
+</div>
 </div>
 
+<!-- ANALYTICS -->
+<div id="analytics" class="screen">
 <div class="card">
-<h3>Analytics</h3>
 <canvas id="chart"></canvas>
 </div>
+</div>
 
+</div>
+
+<!-- NAV -->
+<div class="navbar" id="navbar" style="display:none;">
+<div onclick="switchTab('dashboard')" id="tab_dashboard" class="activeTab">Dashboard</div>
+<div onclick="switchTab('fuel')" id="tab_fuel">Fuel</div>
+<div onclick="switchTab('daily')" id="tab_daily">KM</div>
+<div onclick="switchTab('analytics')" id="tab_analytics">Analytics</div>
 </div>
 
 <script>
 
-let currentUser=null;
-let data={};
+let user;
+let db;
+let chartInstance;
 
 function login(){
 let id=loginId.value;
 let pin=loginPin.value;
-if(!id||!pin)return alert("Enter details");
+if(!id||!pin)return alert("Enter ID & PIN");
 
-let users=JSON.parse(localStorage.getItem("users"))||{};
+let users=JSON.parse(localStorage.getItem("cgn_users"))||{};
 
 if(!users[id]){
 users[id]={pin:pin,data:initData()};
@@ -137,39 +177,37 @@ users[id]={pin:pin,data:initData()};
 if(users[id].pin!==pin)return alert("Wrong PIN");
 }
 
-localStorage.setItem("users",JSON.stringify(users));
-currentUser=id;
-data=users[id].data;
+localStorage.setItem("cgn_users",JSON.stringify(users));
+user=id;
+db=users[id].data;
 
-loginScreen.classList.add("hidden");
-appScreen.classList.remove("hidden");
+loginScreen.style.display="none";
+app.style.display="block";
+navbar.style.display="flex";
 render();
 }
 
 function initData(){
 return{
-daily:[],
-fuel:[],
-maint:[],
-tankKM:0,
-tankFuel:0,
+tankCapacity:4,
 mileage:25,
-tankCapacity:4
+tankKM:0,
+fuelHistory:[],
+kmHistory:[]
 }
 }
 
 function save(){
-let users=JSON.parse(localStorage.getItem("users"));
-users[currentUser].data=data;
-localStorage.setItem("users",JSON.stringify(users));
+let users=JSON.parse(localStorage.getItem("cgn_users"));
+users[user].data=db;
+localStorage.setItem("cgn_users",JSON.stringify(users));
 }
 
-function addDaily(){
+function addKM(){
 let km=+dailyKM.value;
-let earn=+dailyEarn.value;
-if(!km||!earn)return;
-data.daily.push({km,earn});
-data.tankKM+=km;
+if(!km)return;
+db.tankKM+=km;
+db.kmHistory.push(km);
 save();
 render();
 }
@@ -179,84 +217,74 @@ let liter=+fuelLiter.value;
 let price=+fuelPrice.value;
 if(!liter||!price)return;
 
-let actualMileage=data.tankKM/liter;
-data.mileage=actualMileage||data.mileage;
-data.fuel.push({liter,price,km:data.tankKM,mileage:actualMileage});
-data.tankKM=0;
-data.tankFuel=liter;
-save();
-render();
-}
+let actualMileage=db.tankKM/liter;
+if(actualMileage>0) db.mileage=actualMileage;
 
-function addMaint(){
-let note=maintNote.value;
-let cost=+maintCost.value;
-if(!note||!cost)return;
-data.maint.push({note,cost});
+db.fuelHistory.push({
+liter,price,
+kmRun:db.tankKM,
+mileage:actualMileage
+});
+
+db.tankKM=0;
 save();
 render();
 }
 
 function resetTank(){
-data.tankKM=0;
+db.tankKM=0;
 save();
 render();
 }
 
 function render(){
 
-let lifetimeKM=data.daily.reduce((s,e)=>s+e.km,0);
-let totalEarnVal=data.daily.reduce((s,e)=>s+e.earn,0);
-let fuelExpense=data.fuel.reduce((s,f)=>s+(f.liter*f.price),0);
-let maintExpense=data.maint.reduce((s,m)=>s+m.cost,0);
-let profit=totalEarnVal-(fuelExpense+maintExpense);
+db.tankCapacity=+tankCapacity.value||db.tankCapacity;
+let manual=+manualMileage.value;
+if(manual>0) db.mileage=manual;
 
-let fuelUsed=data.tankKM/data.mileage;
-let fuelLeftVal=Math.max(data.tankCapacity-fuelUsed,0);
+let fuelUsed=db.tankKM/db.mileage;
+let fuelLeft=Math.max(db.tankCapacity-fuelUsed,0);
+let kmRun=fuelLeft*db.mileage;
 
-lifetimeKMEl=lifetimeKM;
-document.getElementById("lifetimeKM").innerText=lifetimeKM;
-document.getElementById("tankKM").innerText=data.tankKM;
-document.getElementById("fuelLeft").innerText=fuelLeftVal.toFixed(2);
-document.getElementById("kmCanRun").innerText=(fuelLeftVal*data.mileage).toFixed(0);
-document.getElementById("totalEarn").innerText=totalEarnVal;
-document.getElementById("netProfit").innerText=profit.toFixed(0);
+fuelLeftEl.innerText=fuelLeft.toFixed(2)+" L";
+kmRunEl.innerText=kmRun.toFixed(0)+" KM";
+tankKM.innerText=db.tankKM+" KM";
+mileageDisplay.innerText=db.mileage.toFixed(1)+" KM/L";
 
-dailyList.innerHTML="";
-data.daily.forEach((d,i)=>{
-dailyList.innerHTML+=`KM:${d.km} ₹${d.earn} <button onclick="deleteDaily(${i})">X</button><br>`;
+fuelHistory.innerHTML="";
+db.fuelHistory.forEach((f,i)=>{
+fuelHistory.innerHTML+=`
+<div style="margin-top:8px;">
+${f.liter}L | KM:${f.kmRun} | ${f.mileage.toFixed(1)}KM/L
+</div>`;
 });
 
-fuelList.innerHTML="";
-data.fuel.forEach((f,i)=>{
-fuelList.innerHTML+=`${f.liter}L ₹${f.price} Mileage:${f.mileage.toFixed(1)} <button onclick="deleteFuel(${i})">X</button><br>`;
-});
-
-maintList.innerHTML="";
-data.maint.forEach((m,i)=>{
-maintList.innerHTML+=`${m.note} ₹${m.cost} <button onclick="deleteMaint(${i})">X</button><br>`;
-});
-
-drawChart(totalEarnVal,fuelExpense,maintExpense,profit);
+drawChart();
 }
 
-function deleteDaily(i){data.daily.splice(i,1);save();render();}
-function deleteFuel(i){data.fuel.splice(i,1);save();render();}
-function deleteMaint(i){data.maint.splice(i,1);save();render();}
-
-let chartInstance;
-function drawChart(earn,fuelExp,maintExp,profit){
+function drawChart(){
 if(chartInstance)chartInstance.destroy();
-chartInstance=new Chart(chart,{
-type:'bar',
+chartInstance=new Chart(document.getElementById("chart"),{
+type:"line",
 data:{
-labels:["Earning","Fuel","Maintenance","Profit"],
+labels:db.fuelHistory.map((_,i)=>"Tank "+(i+1)),
 datasets:[{
-data:[earn,fuelExp,maintExp,profit],
-backgroundColor:["#00ff88","#ff4444","#ffaa00","#00ccff"]
+label:"Mileage",
+data:db.fuelHistory.map(f=>f.mileage),
+borderColor:"#00ffaa",
+backgroundColor:"rgba(0,255,170,0.1)"
 }]
 }
 });
+}
+
+function switchTab(tab){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(tab).classList.add("active");
+
+document.querySelectorAll(".navbar div").forEach(d=>d.classList.remove("activeTab"));
+document.getElementById("tab_"+tab).classList.add("activeTab");
 }
 
 </script>
