@@ -1,291 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CGN Smart</title>
+
+<link rel="manifest" href="manifest.json">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box;}
 body{
 margin:0;
-font-family:Segoe UI;
-background:linear-gradient(160deg,#0c0f1a,#111827);
+font-family:Arial, sans-serif;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
 color:white;
-overflow:hidden;
+overflow-x:hidden;
 }
 
-.screen{
-display:none;
-height:calc(100vh - 70px);
-overflow-y:auto;
-padding-bottom:20px;
+.container{
+display:flex;
+width:500%;
+transition:0.5s;
 }
 
-.active{display:block;}
+.page{
+width:100vw;
+padding:20px;
+}
 
 .card{
-background:rgba(255,255,255,0.05);
-margin:15px;
-padding:20px;
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(10px);
 border-radius:20px;
-backdrop-filter:blur(15px);
-box-shadow:0 0 25px rgba(0,255,170,0.1);
+padding:20px;
+margin-bottom:20px;
+box-shadow:0 0 20px rgba(0,255,255,0.2);
 }
 
 input{
 width:100%;
-padding:12px;
-margin:6px 0;
+padding:10px;
+margin:5px 0;
 border:none;
-border-radius:12px;
-background:#1a1f2e;
-color:white;
+border-radius:10px;
 }
 
 button{
-width:100%;
-padding:12px;
-margin-top:8px;
+padding:10px;
 border:none;
-border-radius:12px;
-background:linear-gradient(90deg,#00ffaa,#00ccff);
+border-radius:10px;
+background:#00ffcc;
 color:black;
 font-weight:bold;
+width:100%;
 }
 
-.big{
-font-size:26px;
-color:#00ffaa;
-font-weight:bold;
-}
-
-.navbar{
+.bottom-nav{
 position:fixed;
 bottom:0;
 width:100%;
-height:70px;
-background:#111827;
 display:flex;
-justify-content:space-around;
-align-items:center;
-border-top:1px solid rgba(255,255,255,0.1);
+background:#111;
 }
 
-.navbar div{
-color:#888;
-font-size:14px;
-text-align:center;
+.bottom-nav button{
+flex:1;
+background:none;
+color:white;
+font-size:16px;
 }
-
-.navbar .activeTab{
-color:#00ffaa;
-}
-
-h3{margin-top:0;}
 </style>
 </head>
+
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="card" style="margin-top:100px;">
-<h2>CGN Smart</h2>
-<input type="text" id="loginId" placeholder="User ID">
-<input type="password" id="loginPin" placeholder="4 Digit PIN">
-<button onclick="login()">Login / Register</button>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none;">
+<div class="container" id="slider">
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="screen active">
+<div class="page">
+<h2>Dashboard</h2>
 <div class="card">
-<h3>Tank Intelligence</h3>
-<div>Fuel Left</div>
-<div class="big" id="fuelLeft">0 L</div>
-<div>KM Can Run</div>
-<div class="big" id="kmRun">0 KM</div>
-<div>Current Tank KM</div>
-<div class="big" id="tankKM">0 KM</div>
-<div>Mileage</div>
-<div class="big" id="mileageDisplay">0 KM/L</div>
-<button onclick="resetTank()">Reset Tank</button>
+<p>Net Profit Today:</p>
+<h1 id="profit">₹0</h1>
+</div>
+</div>
+
+<!-- EARNINGS -->
+<div class="page">
+<h2>Earnings</h2>
+<div class="card">
+<input type="number" id="km" placeholder="Daily KM">
+<input type="number" id="income" placeholder="Income">
+<input type="number" id="fuelCost" placeholder="Fuel Cost">
+<input type="number" id="maintCost" placeholder="Maintenance Cost">
+<button onclick="calculate()">Calculate</button>
 </div>
 </div>
 
 <!-- FUEL -->
-<div id="fuel" class="screen">
+<div class="page">
+<h2>Fuel Analyzer</h2>
 <div class="card">
-<h3>Fuel Settings</h3>
-<input type="number" id="tankCapacity" placeholder="Tank Capacity (Default 4)" value="4">
-<input type="number" id="manualMileage" placeholder="Manual Mileage (optional)">
+<canvas id="fuelChart"></canvas>
+</div>
 </div>
 
+<!-- MAINTENANCE -->
+<div class="page">
+<h2>Maintenance</h2>
 <div class="card">
-<h3>Add Fuel Refill</h3>
-<input type="number" id="fuelLiter" placeholder="Liter">
-<input type="number" id="fuelPrice" placeholder="Price per Liter">
-<button onclick="addFuel()">Save Refill</button>
-<div id="fuelHistory"></div>
+<input type="number" id="lastService" placeholder="Last Service KM">
+<input type="number" id="currentKM" placeholder="Current KM">
+<input type="number" id="interval" placeholder="Service Interval">
+<button onclick="serviceCheck()">Check</button>
+<p id="serviceStatus"></p>
 </div>
 </div>
 
-<!-- DAILY -->
-<div id="daily" class="screen">
+<!-- GROWTH -->
+<div class="page">
+<h2>Growth</h2>
 <div class="card">
-<h3>Add KM</h3>
-<input type="number" id="dailyKM" placeholder="KM Driven">
-<button onclick="addKM()">Add KM</button>
-</div>
-</div>
-
-<!-- ANALYTICS -->
-<div id="analytics" class="screen">
-<div class="card">
-<canvas id="chart"></canvas>
+<p>Lifetime Profit: ₹<span id="lifetime">0</span></p>
 </div>
 </div>
 
 </div>
 
-<!-- NAV -->
-<div class="navbar" id="navbar" style="display:none;">
-<div onclick="switchTab('dashboard')" id="tab_dashboard" class="activeTab">Dashboard</div>
-<div onclick="switchTab('fuel')" id="tab_fuel">Fuel</div>
-<div onclick="switchTab('daily')" id="tab_daily">KM</div>
-<div onclick="switchTab('analytics')" id="tab_analytics">Analytics</div>
+<div class="bottom-nav">
+<button onclick="slide(0)">🏠</button>
+<button onclick="slide(1)">💰</button>
+<button onclick="slide(2)">⛽</button>
+<button onclick="slide(3)">🛠</button>
+<button onclick="slide(4)">📊</button>
 </div>
 
 <script>
+let slider=document.getElementById("slider");
 
-let user;
-let db;
-let chartInstance;
+function slide(index){
+slider.style.transform="translateX(-"+(index*100)+"vw)";
+}
 
-function login(){
-let id=loginId.value;
-let pin=loginPin.value;
-if(!id||!pin)return alert("Enter ID & PIN");
+function calculate(){
+let km=document.getElementById("km").value;
+let income=document.getElementById("income").value;
+let fuel=document.getElementById("fuelCost").value;
+let maint=document.getElementById("maintCost").value;
 
-let users=JSON.parse(localStorage.getItem("cgn_users"))||{};
+let profit=income - fuel - maint;
 
-if(!users[id]){
-users[id]={pin:pin,data:initData()};
+document.getElementById("profit").innerText="₹"+profit;
+document.getElementById("lifetime").innerText=profit;
+}
+
+function serviceCheck(){
+let last=parseInt(document.getElementById("lastService").value);
+let current=parseInt(document.getElementById("currentKM").value);
+let interval=parseInt(document.getElementById("interval").value);
+
+let due=(last+interval)-current;
+
+if(due>0){
+document.getElementById("serviceStatus").innerText="Service due in "+due+" KM";
 }else{
-if(users[id].pin!==pin)return alert("Wrong PIN");
-}
-
-localStorage.setItem("cgn_users",JSON.stringify(users));
-user=id;
-db=users[id].data;
-
-loginScreen.style.display="none";
-app.style.display="block";
-navbar.style.display="flex";
-render();
-}
-
-function initData(){
-return{
-tankCapacity:4,
-mileage:25,
-tankKM:0,
-fuelHistory:[],
-kmHistory:[]
+document.getElementById("serviceStatus").innerText="Service Overdue!";
 }
 }
 
-function save(){
-let users=JSON.parse(localStorage.getItem("cgn_users"));
-users[user].data=db;
-localStorage.setItem("cgn_users",JSON.stringify(users));
-}
-
-function addKM(){
-let km=+dailyKM.value;
-if(!km)return;
-db.tankKM+=km;
-db.kmHistory.push(km);
-save();
-render();
-}
-
-function addFuel(){
-let liter=+fuelLiter.value;
-let price=+fuelPrice.value;
-if(!liter||!price)return;
-
-let actualMileage=db.tankKM/liter;
-if(actualMileage>0) db.mileage=actualMileage;
-
-db.fuelHistory.push({
-liter,price,
-kmRun:db.tankKM,
-mileage:actualMileage
-});
-
-db.tankKM=0;
-save();
-render();
-}
-
-function resetTank(){
-db.tankKM=0;
-save();
-render();
-}
-
-function render(){
-db.tankCapacity=+tankCapacity.value||db.tankCapacity;
-let manual=+manualMileage.value;
-if(manual>0) db.mileage=manual;
-
-let fuelUsed=db.tankKM/db.mileage;
-let fuelLeft=Math.max(db.tankCapacity-fuelUsed,0);
-let kmRun=fuelLeft*db.mileage;
-
-fuelLeftEl.innerText=fuelLeft.toFixed(2)+" L";
-kmRunEl.innerText=kmRun.toFixed(0)+" KM";
-tankKM.innerText=db.tankKM+" KM";
-mileageDisplay.innerText=db.mileage.toFixed(1)+" KM/L";
-
-fuelHistory.innerHTML="";
-db.fuelHistory.forEach((f,i)=>{
-fuelHistory.innerHTML+=`
-<div style="margin-top:8px;">
-${f.liter}L | KM:${f.kmRun} | ${f.mileage.toFixed(1)}KM/L
-</div>`;
-});
-
-drawChart();
-}
-
-function drawChart(){
-if(chartInstance)chartInstance.destroy();
-chartInstance=new Chart(document.getElementById("chart"),{
+new Chart(document.getElementById("fuelChart"),{
 type:"line",
 data:{
-labels:db.fuelHistory.map((_,i)=>"Tank "+(i+1)),
+labels:["Tank1","Tank2","Tank3"],
 datasets:[{
 label:"Mileage",
-data:db.fuelHistory.map(f=>f.mileage),
-borderColor:"#00ffaa",
-backgroundColor:"rgba(0,255,170,0.1)"
+data:[28,27,22],
+borderColor:"#00ffcc",
+fill:false
 }]
 }
 });
-}
-
-function switchTab(tab){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-document.getElementById(tab).classList.add("active");
-
-document.querySelectorAll(".navbar div").forEach(d=>d.classList.remove("activeTab"));
-document.getElementById("tab_"+tab).classList.add("activeTab");
-}
-
 </script>
+
 </body>
 </html>
