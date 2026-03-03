@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGN Smart</title>
+
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+height:100vh;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+}
+
+.slider{
+flex:1;
+display:flex;
+width:500%;
+transition:0.4s ease;
+}
+
+.page{
+width:100vw;
+padding:20px;
+overflow-y:auto;
+padding-bottom:80px;
+}
+
+.card{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+border-radius:20px;
+padding:20px;
+margin-bottom:20px;
+box-shadow:0 0 15px rgba(0,255,255,0.2);
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border:none;
+border-radius:10px;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:10px;
+background:#00ffcc;
+color:black;
+font-weight:bold;
+width:100%;
+}
+
+.bottom-nav{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+display:flex;
+background:#111;
+height:60px;
+}
+
+.bottom-nav button{
+flex:1;
+background:none;
+color:white;
+border:none;
+font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="slider" id="slider">
+
+<div class="page">
+<h2>Dashboard</h2>
+<div class="card">
+<p>Net Profit Today:</p>
+<h1 id="profit">₹0</h1>
+</div>
+</div>
+
+<div class="page">
+<h2>Earnings</h2>
+<div class="card">
+<input type="number" id="income" placeholder="Income">
+<input type="number" id="fuel" placeholder="Fuel Cost">
+<input type="number" id="maint" placeholder="Maintenance Cost">
+<button onclick="calc()">Calculate</button>
+</div>
+</div>
+
+<div class="page">
+<h2>Fuel</h2>
+<div class="card">
+<canvas id="chart"></canvas>
+</div>
+</div>
+
+<div class="page">
+<h2>Maintenance</h2>
+<div class="card">
+<input type="number" id="last" placeholder="Last Service KM">
+<input type="number" id="current" placeholder="Current KM">
+<input type="number" id="interval" placeholder="Interval">
+<button onclick="check()">Check</button>
+<p id="status"></p>
+</div>
+</div>
+
+<div class="page">
+<h2>Growth</h2>
+<div class="card">
+<p>Lifetime Profit: ₹<span id="life">0</span></p>
+</div>
+</div>
+
+</div>
+
+<div class="bottom-nav">
+<button onclick="slide(0)">🏠</button>
+<button onclick="slide(1)">💰</button>
+<button onclick="slide(2)">⛽</button>
+<button onclick="slide(3)">🛠</button>
+<button onclick="slide(4)">📊</button>
+</div>
+
+<script>
+let slider=document.getElementById("slider");
+
+function slide(i){
+slider.style.transform="translateX(-"+(i*100)+"vw)";
+}
+
+function calc(){
+let income=+document.getElementById("income").value;
+let fuel=+document.getElementById("fuel").value;
+let maint=+document.getElementById("maint").value;
+
+let profit=income-fuel-maint;
+
+document.getElementById("profit").innerText="₹"+profit;
+document.getElementById("life").innerText=profit;
+}
+
+function check(){
+let last=+document.getElementById("last").value;
+let current=+document.getElementById("current").value;
+let interval=+document.getElementById("interval").value;
+
+let due=(last+interval)-current;
+
+document.getElementById("status").innerText=
+due>0 ? "Service due in "+due+" KM" : "Service Overdue!";
+}
+
+new Chart(document.getElementById("chart"),{
+type:"line",
+data:{
+labels:["T1","T2","T3"],
+datasets:[{
+label:"Mileage",
+data:[28,27,22],
+borderColor:"#00ffcc",
+fill:false
+}]
+}
+});
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
