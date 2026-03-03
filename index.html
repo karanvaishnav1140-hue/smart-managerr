@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rickshaw Pro X</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+margin:0;
+font-family:Segoe UI;
+background:#0f0f14;
+color:white;
+}
+.card{
+background:rgba(255,255,255,0.05);
+margin:15px;
+padding:18px;
+border-radius:20px;
+backdrop-filter:blur(10px);
+box-shadow:0 0 20px rgba(0,255,136,0.1);
+}
+input{
+width:100%;
+padding:12px;
+margin:6px 0;
+border:none;
+border-radius:12px;
+background:#1a1a25;
+color:white;
+}
+button{
+width:100%;
+padding:12px;
+margin-top:8px;
+border:none;
+border-radius:12px;
+background:#00ff88;
+color:black;
+font-weight:bold;
+}
+.navbar{
+position:fixed;
+bottom:0;
+width:100%;
+background:#111;
+display:flex;
+justify-content:space-around;
+padding:10px 0;
+}
+.navbar div{font-size:14px;}
+.hidden{display:none;}
+.big{
+font-size:22px;
+color:#00ff88;
+font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="card">
+<h2>Rickshaw Pro X</h2>
+<input type="text" id="loginId" placeholder="User ID">
+<input type="password" id="loginPin" placeholder="4 Digit PIN">
+<button onclick="login()">Login / Register</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="appScreen" class="hidden">
+
+<div class="card">
+<h3>Dashboard</h3>
+<div>Lifetime KM</div>
+<div class="big" id="lifetimeKM">0</div>
+<div>Current Tank KM</div>
+<div class="big" id="tankKM">0</div>
+<div>Fuel Left (L)</div>
+<div class="big" id="fuelLeft">0</div>
+<div>KM Can Run</div>
+<div class="big" id="kmCanRun">0</div>
+<div>Total Earning</div>
+<div class="big" id="totalEarn">0</div>
+<div>Net Profit</div>
+<div class="big" id="netProfit">0</div>
+<button onclick="resetTank()">Reset Tank Cycle</button>
+</div>
+
+<div class="card">
+<h3>Daily Entry</h3>
+<input type="number" id="dailyKM" placeholder="KM Driven">
+<input type="number" id="dailyEarn" placeholder="Earning ₹">
+<button onclick="addDaily()">Add</button>
+<div id="dailyList"></div>
+</div>
+
+<div class="card">
+<h3>Fuel Refill</h3>
+<input type="number" id="fuelLiter" placeholder="Liter">
+<input type="number" id="fuelPrice" placeholder="Price per Liter">
+<button onclick="addFuel()">Add Fuel</button>
+<div id="fuelList"></div>
+</div>
+
+<div class="card">
+<h3>Maintenance</h3>
+<input type="text" id="maintNote" placeholder="Note">
+<input type="number" id="maintCost" placeholder="Cost">
+<button onclick="addMaint()">Add</button>
+<div id="maintList"></div>
+</div>
+
+<div class="card">
+<h3>Analytics</h3>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+
+let currentUser=null;
+let data={};
+
+function login(){
+let id=loginId.value;
+let pin=loginPin.value;
+if(!id||!pin)return alert("Enter details");
+
+let users=JSON.parse(localStorage.getItem("users"))||{};
+
+if(!users[id]){
+users[id]={pin:pin,data:initData()};
+}else{
+if(users[id].pin!==pin)return alert("Wrong PIN");
+}
+
+localStorage.setItem("users",JSON.stringify(users));
+currentUser=id;
+data=users[id].data;
+
+loginScreen.classList.add("hidden");
+appScreen.classList.remove("hidden");
+render();
+}
+
+function initData(){
+return{
+daily:[],
+fuel:[],
+maint:[],
+tankKM:0,
+tankFuel:0,
+mileage:25,
+tankCapacity:4
+}
+}
+
+function save(){
+let users=JSON.parse(localStorage.getItem("users"));
+users[currentUser].data=data;
+localStorage.setItem("users",JSON.stringify(users));
+}
+
+function addDaily(){
+let km=+dailyKM.value;
+let earn=+dailyEarn.value;
+if(!km||!earn)return;
+data.daily.push({km,earn});
+data.tankKM+=km;
+save();
+render();
+}
+
+function addFuel(){
+let liter=+fuelLiter.value;
+let price=+fuelPrice.value;
+if(!liter||!price)return;
+
+let actualMileage=data.tankKM/liter;
+data.mileage=actualMileage||data.mileage;
+data.fuel.push({liter,price,km:data.tankKM,mileage:actualMileage});
+data.tankKM=0;
+data.tankFuel=liter;
+save();
+render();
+}
+
+function addMaint(){
+let note=maintNote.value;
+let cost=+maintCost.value;
+if(!note||!cost)return;
+data.maint.push({note,cost});
+save();
+render();
+}
+
+function resetTank(){
+data.tankKM=0;
+save();
+render();
+}
+
+function render(){
+
+let lifetimeKM=data.daily.reduce((s,e)=>s+e.km,0);
+let totalEarnVal=data.daily.reduce((s,e)=>s+e.earn,0);
+let fuelExpense=data.fuel.reduce((s,f)=>s+(f.liter*f.price),0);
+let maintExpense=data.maint.reduce((s,m)=>s+m.cost,0);
+let profit=totalEarnVal-(fuelExpense+maintExpense);
+
+let fuelUsed=data.tankKM/data.mileage;
+let fuelLeftVal=Math.max(data.tankCapacity-fuelUsed,0);
+
+lifetimeKMEl=lifetimeKM;
+document.getElementById("lifetimeKM").innerText=lifetimeKM;
+document.getElementById("tankKM").innerText=data.tankKM;
+document.getElementById("fuelLeft").innerText=fuelLeftVal.toFixed(2);
+document.getElementById("kmCanRun").innerText=(fuelLeftVal*data.mileage).toFixed(0);
+document.getElementById("totalEarn").innerText=totalEarnVal;
+document.getElementById("netProfit").innerText=profit.toFixed(0);
+
+dailyList.innerHTML="";
+data.daily.forEach((d,i)=>{
+dailyList.innerHTML+=`KM:${d.km} ₹${d.earn} <button onclick="deleteDaily(${i})">X</button><br>`;
+});
+
+fuelList.innerHTML="";
+data.fuel.forEach((f,i)=>{
+fuelList.innerHTML+=`${f.liter}L ₹${f.price} Mileage:${f.mileage.toFixed(1)} <button onclick="deleteFuel(${i})">X</button><br>`;
+});
+
+maintList.innerHTML="";
+data.maint.forEach((m,i)=>{
+maintList.innerHTML+=`${m.note} ₹${m.cost} <button onclick="deleteMaint(${i})">X</button><br>`;
+});
+
+drawChart(totalEarnVal,fuelExpense,maintExpense,profit);
+}
+
+function deleteDaily(i){data.daily.splice(i,1);save();render();}
+function deleteFuel(i){data.fuel.splice(i,1);save();render();}
+function deleteMaint(i){data.maint.splice(i,1);save();render();}
+
+let chartInstance;
+function drawChart(earn,fuelExp,maintExp,profit){
+if(chartInstance)chartInstance.destroy();
+chartInstance=new Chart(chart,{
+type:'bar',
+data:{
+labels:["Earning","Fuel","Maintenance","Profit"],
+datasets:[{
+data:[earn,fuelExp,maintExp,profit],
+backgroundColor:["#00ff88","#ff4444","#ffaa00","#00ccff"]
+}]
+}
+});
+}
+
+</script>
+</body>
+</html>
